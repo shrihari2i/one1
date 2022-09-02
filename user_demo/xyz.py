@@ -1,7 +1,7 @@
 import requests
 import json
  
-URL = "http://127.0.0.1:8000/score/"
+URL = "http://43.205.44.117:8000"
  
 data = {
     "day_score":1,
