@@ -11,9 +11,12 @@ class Players(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     Player_name= models.CharField(max_length=100,default="guest")
     day_score = models.IntegerField(default=0)
+    attemt = models.IntegerField(default=0)
     season_score = models.IntegerField(default=0)
     attended = models.BooleanField(default=False)          
     accuracy = models.IntegerField(default=0)
+    rank = models.IntegerField(default=0)
+    percentile = models.FloatField(default=0)
     total_days_of_season =  models.IntegerField(default=0)
     number_of_days_participated =  models.IntegerField(default=0)     #save attemted here
     consecutive_streak =  models.IntegerField(default=0)
@@ -37,6 +40,7 @@ class Quiz_up(models.Model):
     option_D =  models.CharField(max_length=250)
     Right_Answer =  models.CharField(max_length=250)
     quiz_fact =  models.CharField(max_length=250)
+    image = models.CharField(max_length=250,null=True)
 
     def __str__(self):
         return self.Questions

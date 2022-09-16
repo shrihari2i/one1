@@ -26,6 +26,7 @@ SECRET_KEY = 'django-insecure-%um^j$!4=3dtwt33l43t)q$n=s)vn@)dvx*$shqav0at$in6!p
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
@@ -36,8 +37,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.IsAdminUser'
-]
-    }
+    ],
+
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
+        'PAGE_SIZE':10
+
+}
+
+
 
 
 # Application definition
@@ -83,16 +91,27 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'user_demo.wsgi.application'
-
+#WSGI_APPLICATION = 'user_demo.wsgi.application'
+ASGI_APPLICATION = 'finalpro.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': "quiztable",
+        'USER': 'postgres',
+        'PASSWORD': 'Priyanka#92',
+        'HOST': 'localhost',
+        'PORT': '5432',
+
     }
 }
 
