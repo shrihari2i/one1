@@ -41,7 +41,7 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.PageNumberPagination',
-        'PAGE_SIZE':10
+        'PAGE_SIZE':5
 
 }
 
@@ -106,9 +106,9 @@ ASGI_APPLICATION = 'finalpro.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': "quiztable",
+        'NAME': "GangUpp_Tables",
         'USER': 'postgres',
-        'PASSWORD': 'Priyanka#92',
+        'PASSWORD': 'A29vedvihar',
         'HOST': 'localhost',
         'PORT': '5432',
 
@@ -156,3 +156,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+APPEND_SLASH = False

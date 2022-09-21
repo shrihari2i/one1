@@ -25,6 +25,10 @@ urlpatterns = [
     path('api-token-auth/', CustomAuthToken.as_view()),
     path('api/users/', ListUsers.as_view()),
     path('leaderboard/',leaderboard.as_view()),
-    path('score/', Score.as_view())
+    path('PlayerScoreDetail/', PlayerScoreDetail.as_view()),
+    # path('score/', Score.as_view()),
+    path('pscore/',P_score.as_view()),
+    path('myscore/',My_score.as_view()),
+    
    
 ]

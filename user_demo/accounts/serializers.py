@@ -1,12 +1,13 @@
+from dataclasses import fields
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
+#from user_demo.accounts.views import Score
 from .models import Players
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login  
 from rest_framework import exceptions
 from django.contrib.auth.models import User, Group
-from .models import Quiz_up
-
+from .models import Quiz_up, PlayerScoreDetail, My_score, P_score
 
 class PlayersSer(serializers.ModelSerializer):
     class Meta:
@@ -50,6 +51,24 @@ class QuizupSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PlayerScoreSerializer(serializers.Serializer):
+    class Meta:
+        model = PlayerScoreDetail
+        fields = '__all__'
+
+class P_scoreSerializer(serializers.Serializer):
+    class Meta:
+        model = P_score
+        fields = ('player_id',)
+    def create(self,validate_data):
+        return P_score.objects.create(**validate_data)
+
+class My_scoreSerializer(serializers.Serializer):
+    class Meta:
+        model = My_score
+        fields = ('player_id','myscr')
+    def create(self,validate_data):
+        return My_score.objects.create(**validate_data)
         
 
 

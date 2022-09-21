@@ -1,3 +1,4 @@
+from tkinter.tix import Tree
 from django.db import models
 from django.contrib.auth.models import User
 import datetime
@@ -6,6 +7,20 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 # Create your models here.
+
+class My_score(models.Model):
+    player_id=models.IntegerField(default=0)
+    myscr = models.CharField(max_length=200, default='vijay')
+
+    def __str__(self):
+        return self.player_id
+
+class P_score(models.Model):
+    player_id=models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.player_id
+
 
 class Players(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -32,7 +47,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 class Quiz_up(models.Model):
-    Match = models.CharField(max_length=250)
+    Match = models.CharField(max_length=250)    
     Questions = models.CharField(max_length=250)
     option_A =  models.CharField(max_length=250)
     option_B =  models.CharField(max_length=250)
@@ -44,4 +59,26 @@ class Quiz_up(models.Model):
 
     def __str__(self):
         return self.Questions
+
+#class user_stats(models.Model):
+#    Total_score = models.IntegerField(default=0)
+ #   Accuracy = models.IntegerField(default=0)
+ #   total_days_participated = models.IntegerField(default=0)
+ #   Streak = models.IntegerField(default=0)
+
+ #   def __str__(self):
+ #       return self.all()
+
+class PlayerScoreDetail(models.Model):
+    player_id = models.IntegerField()
+    seasonGame_id = models.CharField(max_length=30)
+    obtained_marks = models.IntegerField()
+    total_marks = models.IntegerField()
+    date = datetime.datetime.now()
+    group_id = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.player_id
+
+
 
