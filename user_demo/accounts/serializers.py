@@ -7,11 +7,14 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login  
 from rest_framework import exceptions
 from django.contrib.auth.models import User, Group
-from .models import Quiz_up, PlayerScoreDetail, My_score, P_score
+#from .models import Quiz_up, PlayerScoreDetail, My_score, P_score, user_stats
 
-class PlayersSer(serializers.ModelSerializer):
+from .models import question_bank, player_score, player_stats, GU_Players
+
+
+class GU_PlayersSer(serializers.ModelSerializer):  #playerSe is old name
     class Meta:
-        model = Players
+        model = GU_Players
         fields = ['Player_name',
                 'day_score', 
                 'season_score', 
@@ -24,7 +27,7 @@ class PlayersSer(serializers.ModelSerializer):
 
 class PlayersleadSer(serializers.ModelSerializer):
     class Meta:
-        model = Players
+        model = GU_Players
         fields = ['id','Player_name',
                 'day_score', 
                 'season_score',]
@@ -44,33 +47,45 @@ class Save_score(serializers.Serializer):
         return Players.objects.create(**validate_data)
 
 
-class QuizupSerializer(serializers.ModelSerializer):
+class question_bankSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Quiz_up
+        model = question_bank #Quiz_up
         fields = "__all__"
 
 
-class PlayerScoreSerializer(serializers.Serializer):
-    class Meta:
-        model = PlayerScoreDetail
-        fields = '__all__'
+# class PlayerScoreSerializer(serializers.Serializer):
+#     class Meta:
+#         model = PlayerScoreDetail
+#         fields = '__all__'
 
-class P_scoreSerializer(serializers.Serializer):
-    class Meta:
-        model = P_score
-        fields = ('player_id',)
-    def create(self,validate_data):
-        return P_score.objects.create(**validate_data)
+# class P_scoreSerializer(serializers.Serializer):
+#     class Meta:
+#         model = P_score
+#         fields = ('player_id')
+#     def create(self,validate_data):
+#         return P_score.objects.create(**validate_data)
 
-class My_scoreSerializer(serializers.Serializer):
+class player_scoreSerializer(serializers.ModelSerializer):#Myscore
     class Meta:
-        model = My_score
-        fields = ('player_id','myscr')
+        model = player_score
+        fields = ('player_id','myscr','season_gameid','total_score','played_dt','player_groupid')
     def create(self,validate_data):
-        return My_score.objects.create(**validate_data)
+        return player_score.objects.create(**validate_data)
         
+class player_statsSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = player_stats
+        fields = ('player_id','alloted_qid','groupid','gameid','user_days_score', 'user_total_score','marks_of_days_quiz','total_marks_of_quiz','accuracy','total_days_participated','consecutive_streak','date_of_participation')    
+    def create(self,validate_data):
+        return player_stats.objects.create(**validate_data)
+        
+class show_player_statsSerializer(serializers.ModelSerializer):
 
-
+    class Meta:
+        model = player_stats
+        fields = ('player_id','alloted_qid','groupid','gameid','user_days_score', 'user_total_score','marks_of_days_quiz','total_marks_of_quiz','accuracy','total_days_participated','consecutive_streak','date_of_participation')    
+    def create(self,validate_data):
+        return player_stats.objects.create(**validate_data)
 

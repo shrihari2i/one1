@@ -20,15 +20,16 @@ from accounts.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('quizsendapi/',QuizupAPI.as_view()),
-    path('showstat', showstat.as_view()),
-    path('player/',playerdetail.as_view()),
+  #  path('showstat', showstat.as_view()),
+  #  path('player/',playerdetail.as_view()),
     path('api-token-auth/', CustomAuthToken.as_view()),
     path('api/users/', ListUsers.as_view()),
     path('leaderboard/',leaderboard.as_view()),
-    path('PlayerScoreDetail/', PlayerScoreDetail.as_view()),
+  #  path('PlayerScoreDetail/', PlayerScoreDetail.as_view()),
     # path('score/', Score.as_view()),
-    path('pscore/',P_score.as_view()),
-    path('myscore/',My_score.as_view()),
+ #   path('pscore/',P_score.as_view()),
+    path('playerscore/',My_score.as_view()),
+    path('showplayerstats/',show_player_stats.as_view())
     
    
 ]
