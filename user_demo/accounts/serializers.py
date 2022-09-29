@@ -99,4 +99,4 @@ class select_winnersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = select_winners
-        fields = ('player_id','game_id', 'winner_category','winner_selection_date','winner_selection_range_from','winner_selection_range_to')      
+        fields = ('winner_ids','game_id', 'winner_category','winner_selection_date','winner_selection_range_from','winner_selection_range_to')      

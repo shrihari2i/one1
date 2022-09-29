@@ -192,7 +192,7 @@ class question_bank(models.Model):   ######### old name quiz_up
         return self.Questions            
 
 class select_winners(models.Model):
-    player_id=models.CharField(max_length=10)
+    winner_ids=models.CharField(max_length=250)
     game_id = models.CharField(max_length=10)
     winner_category = models.CharField(max_length=10)
     winner_selection_date = models.DateField(default="2022,12-24")

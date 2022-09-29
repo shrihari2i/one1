@@ -162,7 +162,7 @@ class leaderboard(APIView):
     permission_classes = [permissions.IsAuthenticated, ]
     pagination_class = PageNumberPagination
 
-    def get(self, request):
+    def post(self, request):
         req_data=request.data
         queryset = player_statsModel.objects.all()  ### filter must be added for filtering by gameid
         if req_data.get('ascORdec')==0:
@@ -415,7 +415,7 @@ class show_player_stats(APIView):
        return queryset
 
 
-    def get(self, request):
+    def post(self, request):
       try:  
        queryset = self.get_queryset()
      #  ha=queryset.order_by("-accuracy")[: :-1]  #get highest accuracy
@@ -515,20 +515,41 @@ class select_winners(APIView):
         req_data = request.data;
         req_player_id = req_data.get('player_id')
         req_game_id = req_data.get('game_id')
+        req_group_id=req_data.get('group_id')
         req_winner_category = req_data.get('winner_category')
         req_winner_selection_date = req_data.get('winner_selection_date')
         req_winner_selection_range_from = req_data.get('winner_selection_range_from')
         req_winner_selection_range_to = req_data.get('winner_selection_range_to')
-      #  try:
+        print(req_group_id)
+        print(req_game_id)
+        print(req_winner_selection_range_from)
+        print(req_winner_selection_range_to)
+        try:
       
-        queryset = player_statsModel.objects.filter(gameid=req_game_id) & player_statsModel.objects.filter(date_of_participation__range=[req_winner_selection_range_from, req_winner_selection_range_to]) 
-        print(queryset)
-        select_random=queryset.order_by('?')[:3]
-        print(select_random)
-      #  serializer = select_winnersSerializer(select_random,many=True)
-        return Response({'success':True, 'message': "Randomly selected 3 winner"})# "data":{serializer.data}})
-      #  except:
-      #      return Response({'success':False, 'message': "Oops!! somthing wrong"})
+            queryset = player_statsModel.objects.filter(groupid=req_group_id) & player_statsModel.objects.filter(gameid=req_game_id) # & player_statsModel.objects.filter(date_of_participation__range=[req_winner_selection_range_from, req_winner_selection_range_to]) 
+            
+            print(queryset)
+            select_random=queryset.order_by('?')[:3]
+            print(select_random)
+            ############## Below code is inserting data in #######################
+            # df = select_winners.objects.create (player_id= req_player_id, game_id=req_game_id,
+            #                                         winner_category=req_winner_category, winner_selection_date=req_winner_selection_date,
+            #                                         winner_selection_date=req_winner_selection_date,
+            #                                         winner_selection_range_from=req_winner_selection_range_from,
+            #                                         winner_selection_range_to=req_winner_selection_range_to,
+                                                    
+            #                                   ) 
+            # df.save()
+            # serializer=player_statsSerializer(df)
+            return Response({'success':True, 'message': "Randomly selected 3 winner"})# "data":{serializer.data}})
+        except:
+                return Response({'success':False, 'message': "Oops!! somthing wrong"})
+            ######################################
+
+        #  serializer = select_winnersSerializer(select_random,many=True)
+            # return Response({'success':True, 'message': "Randomly selected 3 winner"})# "data":{serializer.data}})
+            # except:
+            #     return Response({'success':False, 'message': "Oops!! somthing wrong"})
 
 
 
