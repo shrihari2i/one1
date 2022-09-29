@@ -29,7 +29,12 @@ urlpatterns = [
     # path('score/', Score.as_view()),
  #   path('pscore/',P_score.as_view()),
     path('playerscore/',My_score.as_view()),
-    path('showplayerstats/',show_player_stats.as_view())
+    path('showplayerstats/',show_player_stats.as_view()),
+    path('CheckIfPlayed/',CheckIfPlayed.as_view()),
+    path('selectwinners/',select_winners.as_view())
+    
+    
+  
     
    
 ]

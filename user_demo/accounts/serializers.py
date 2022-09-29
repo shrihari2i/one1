@@ -9,7 +9,7 @@ from rest_framework import exceptions
 from django.contrib.auth.models import User, Group
 #from .models import Quiz_up, PlayerScoreDetail, My_score, P_score, user_stats
 
-from .models import question_bank, player_score, player_stats, GU_Players
+from .models import question_bank, player_score, player_stats, GU_Players, select_winners
 
 
 class GU_PlayersSer(serializers.ModelSerializer):  #playerSe is old name
@@ -80,7 +80,7 @@ class player_statsSerializer(serializers.ModelSerializer):
         fields = ('player_id','alloted_qid','groupid','gameid','user_days_score', 'user_total_score','marks_of_days_quiz','total_marks_of_quiz','accuracy','total_days_participated','consecutive_streak','date_of_participation')    
     def create(self,validate_data):
         return player_stats.objects.create(**validate_data)
-        
+
 class show_player_statsSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -89,3 +89,14 @@ class show_player_statsSerializer(serializers.ModelSerializer):
     def create(self,validate_data):
         return player_stats.objects.create(**validate_data)
 
+class leaderboardSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = player_stats
+        fields = ('player_id','user_days_score', 'user_total_score')    
+
+class select_winnersSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = select_winners
+        fields = ('player_id','game_id', 'winner_category','winner_selection_date','winner_selection_range_from','winner_selection_range_to')      

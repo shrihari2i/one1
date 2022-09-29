@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from importlib.resources import contents
 from tokenize import group
+from unittest import result
 from django.shortcuts import render
 from datetime import date
 from datetime import datetime
@@ -13,14 +15,16 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponse
 #from .models import Players, Quiz_up, PlayerScoreDetail
 #from .models import P_score as P_scoreModel
 from .models import player_score as player_scoreModel
 from .models import player_stats as player_statsModel 
 #from .serializers import PlayersSer, QuizupSerializer, PlayersleadSer, Save_score, PlayerScoreSerializer, P_scoreSerializer, My_scoreSerializer, user_statsSerializer
-from .models import player_stats,player_score,question_bank, GU_Players
-from .serializers import question_bankSerializer, player_scoreSerializer, player_statsSerializer,show_player_statsSerializer
+from .models import player_stats,player_score,question_bank, GU_Players, select_winners
+   
+from .serializers import question_bankSerializer, player_scoreSerializer, player_statsSerializer,show_player_statsSerializer,leaderboardSerializer, select_winnersSerializer
 import random
 import io
 from rest_framework.parsers import JSONParser
@@ -86,17 +90,20 @@ class CustomAuthToken(ObtainAuthToken):
             return Response({'success': False, 'message':"User does not exist","data": {}})
 
 
+
+
+
 ### for fetching questions **************************************
 class QuizupAPI(APIView):
      authentication_classes = [authentication.TokenAuthentication]
      permission_classes = [permissions.IsAuthenticated]
   
      def get(self, request,*args,**kwargs):
-        user_data = request.data
+       # req_player_id = request.data
         #print("\n\n\n")
-        #a = request.user
+      #  a = request.user
         #print(a)
-        
+    
         question_count_from_admin=10
         duration_ques=60
         marks_of_each_ques=10
@@ -104,13 +111,40 @@ class QuizupAPI(APIView):
 
          got = {'user':str(request.user.id)}
          content = int(got["user"])
-         quiz_send = question_bank.objects.order_by('?')[:question_count_from_admin]
+         ques_sort_by_today=question_bank.objects.filter(date_of_ques_in_quiz=date.today())
+      #   quiz_send = question_bank.objects.order_by('?')[:question_count_from_admin]
+         quiz_send = ques_sort_by_today.order_by('?')[:question_count_from_admin]
          serializer = question_bankSerializer(quiz_send, many=True)
          tobesend = serializer.data
          current_datetime = datetime.datetime.now()
          return Response({'success': True, 'message': 'Success', "data": {'count': question_count_from_admin, 'Duration': duration_ques, 'total_marks': marks_of_each_ques, "results": tobesend}})
         except:
          return Response({'Success': False, 'message': 'Oops!!! Something went wrong. Contact Admin'})   
+
+class CheckIfPlayed(APIView):
+     authentication_classes = [authentication.TokenAuthentication, ]
+     permission_classes = [permissions.IsAuthenticated, ]
+  #   @api_view(['GET'])
+    # @permission_classes([AllowAny])
+     def get(self, request,*args,**kwargs):
+        
+        req_data = request.data
+        print("Check"+req_data.get('player_id'))   
+        print("Check grp"+req_data.get('player_groupid'))   
+        
+        queryset = player_statsModel.objects.filter(player_id=req_data.get('player_id')) & player_statsModel.objects.filter(date_of_participation=req_data.get('played_dt')) & player_statsModel.objects.filter(groupid=req_data.get('player_groupid'))
+        print(queryset)
+        if queryset.exists():
+            return Response({"Success": False, "message": "You have played the game today. You may [play tomorrow"})
+     
+        else:
+            return Response({"Success": True, "message": "Wish you good luck for quiz"})
+           
+        #print("\n\n\n")
+        #  a = request.user
+        #print(a)
+        
+
 #### fetch question end ********************************************
 # class playerdetail(ListAPIView):
 #     def get(self, request):
@@ -129,19 +163,28 @@ class leaderboard(APIView):
     pagination_class = PageNumberPagination
 
     def get(self, request):
-        my_scoredata=request.data
-        queryset = player_scoreModel.objects.all()
-      #  queryset = My_scoreModel.objects.filter(player_id=100)
-      #  print(queryset.get('myscr'),'*****************************')
-      #  b = queryset.order_by('-day_score')
-        b = queryset.filter(player_id=my_scoredata.get('player_id')) & queryset.filter(player_groupid=my_scoredata.get('groupid'))
-        x=b.values_list('myscr', flat=True)
-        print(x[0])
-        b.update(myscr=14)
-        paginator = PageNumberPagination()
-        result_page = paginator.paginate_queryset(b, request)
-        serializer = PlayersleadSer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        req_data=request.data
+        queryset = player_statsModel.objects.all()  ### filter must be added for filtering by gameid
+        if req_data.get('ascORdec')==0:
+             b  = queryset.order_by('user_days_score')
+        elif req_data.get('ascORdec')==1:
+             b  = queryset.order_by('-user_days_score')     
+        elif req_data.get('ascORdec')==2:
+             b  = queryset.order_by('user_total_score')     
+        elif req_data.get('ascORdec')==3:
+             b  = queryset.order_by('-user_total_score')         
+
+        try:
+        # If they need count, next, previous page link then we can implement commented code
+            # paginator = PageNumberPagination()
+            # result_page = paginator.paginate_queryset(b, request)
+            # serializer = leaderboardSerializer(result_page, many=True)
+            # result = paginator.get_paginated_response(serializer.data)
+            result = leaderboardSerializer(b, many=True)
+            return Response({"Success":True, "Message":"Leaderboard Records","Results":result.data})
+        except:
+            return Response({"Success":False,"Message":"Record not found"})
+            
 
 ## on submit questions
 # class Score(APIView):
@@ -364,6 +407,7 @@ class show_player_stats(APIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer = show_player_statsSerializer
+    serailizer_scr = player_scoreSerializer
 
     def get_queryset(self):
        queryset = player_statsModel.objects.all()
@@ -372,29 +416,86 @@ class show_player_stats(APIView):
 
 
     def get(self, request):
+      try:  
        queryset = self.get_queryset()
-       max1=queryset.order_by("-accuracy")[0]  #get highest accuracy
+     #  ha=queryset.order_by("-accuracy")[: :-1]  #get highest accuracy
+     #  print(ha,"**********************")
+       max1 = queryset.order_by("-accuracy")
        data=request.data
        req_player_id = data.get('player_id')
-       print(req_player_id);
-       highest_accu = max1.accuracy;
-       print(highest_accu)
+    #   print(req_player_id)
+    #   print("################")
+       a=max1.values_list('accuracy', flat=True)
+    #   print(a[0])
        max2=queryset.filter(player_id = req_player_id)
-     
+    
        z=max2.values_list('accuracy',flat=True)
-       percentile = (z[0]/highest_accu)*100
+       print("accuracy of: "+req_player_id+" is " +str(z[0]))
+       percentile = (z[0]/a[0])*100
        print("percentile: "+str(percentile))
        max3=queryset.order_by("accuracy")
-       print(max3)
-    #    index=0
-    #    for player_id in max3.iterator():
-    #     index=index+1
-    #     print(max3.player_id+" "+req_player_id)
-    #     if (player_id==req_player_id):
-    #         print(" Rank: "+index)
+       max_accu = max3.values_list('accuracy',flat=True)
+    #   print(max_accu) 
+       player_id_list = max3.values_list('player_id',flat=True)
+    #   print(player_id_list)
+       accu_groupby = queryset.order_by('-accuracy').values('accuracy').distinct()
+       max_accu_groupby = accu_groupby.values_list('accuracy',flat=True)
+    #   print(max_accu_groupby) 
+       index=0
+       inner_ind=0
+       gb_ind=0
+       for player_id in max3.iterator():
+        index=index+1
+     #   print(str(player_id)+" "+req_player_id)#+" "+max_accu)
+        if str(player_id)==req_player_id:
+      #      print(" Rank: ",+index)
+            inner_ind=index
+            break
+           
+            
+       inner_index=0    
+       for x in max_accu.iterator():
+            inner_index=inner_index+1
+            if(inner_index==inner_ind):
+                gb_ind=x
+     #           print(x)
+                break
+                
+       gb_index=0        
+       for y in max_accu_groupby.iterator():
+            gb_index=gb_index+1
+         #   print(str(y)+"  "+str(x))
+            if(y==x):
+                print (" RANK: "+str(gb_index))
+                break
+      
+       player_total_score = max2.values_list('user_total_score',flat=True)
+       print("player_total_score: "+str(*player_total_score,))
+       days_participated = max2.values_list('total_days_participated',flat=True)
+       print("days_participated: "+str(*days_participated,))
+       streak = max2.values_list('consecutive_streak',flat=True)
+       print("streak:"+str(*streak,))
+       ############## data from player score to plot graph
+       queryset_scr = player_scoreModel.objects.filter(player_id=req_player_id)
+       queryset_scr_dt = queryset_scr.order_by('played_dt')
+       xy_data = queryset_scr_dt.values('played_dt','myscr') 
+      # x_qdt = queryset_scr_dt.values_list('played_dt',flat=True)
+       
+       print(" player id :"+req_player_id)
+      
+
+       ############################# end of graph data code 
+        # return Response({'success': True, 'message': 'Success', "data": {'count': question_count_from_admin, 'Duration': duration_ques, 'total_marks': marks_of_each_ques, "results": tobesend}})
+        # except:
+        #  return Response({'Success': False, 'message': 'Oops!!! Something went wrong. Contact Admin'})   
+
        serializer = show_player_statsSerializer(queryset,many=True)
-       return Response(serializer.data)
-    
+       return Response({'success': True, 'message': 'Success', "data": {'player_total_score': str(*player_total_score)
+                                    , 'Accuracy': str(z[0])+'%', 'Rank': gb_index, "percentile": percentile,'total_days_of_the_season':'hc',
+                                    'no.of_days_participated': str(*days_participated),'streak':str(*streak,) , 'bar_chart':xy_data}})
+      except: 
+        return Response({'success': False, 'message': 'Error!', "data": { }})
+      
     def post(self, request, format=None):
        
       #  print(request.data,'############')
@@ -405,10 +506,29 @@ class show_player_stats(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
-
+class select_winners(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer = select_winnersSerializer
+    
+    def post(self, request):
+        req_data = request.data;
+        req_player_id = req_data.get('player_id')
+        req_game_id = req_data.get('game_id')
+        req_winner_category = req_data.get('winner_category')
+        req_winner_selection_date = req_data.get('winner_selection_date')
+        req_winner_selection_range_from = req_data.get('winner_selection_range_from')
+        req_winner_selection_range_to = req_data.get('winner_selection_range_to')
+      #  try:
+      
+        queryset = player_statsModel.objects.filter(gameid=req_game_id) & player_statsModel.objects.filter(date_of_participation__range=[req_winner_selection_range_from, req_winner_selection_range_to]) 
+        print(queryset)
+        select_random=queryset.order_by('?')[:3]
+        print(select_random)
+      #  serializer = select_winnersSerializer(select_random,many=True)
+        return Response({'success':True, 'message': "Randomly selected 3 winner"})# "data":{serializer.data}})
+      #  except:
+      #      return Response({'success':False, 'message': "Oops!! somthing wrong"})
 
 
 

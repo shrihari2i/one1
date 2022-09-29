@@ -186,8 +186,18 @@ class question_bank(models.Model):   ######### old name quiz_up
     Right_Answer =  models.CharField(max_length=250)
     quiz_fact =  models.CharField(max_length=250)
     image = models.ImageField(default="logo.png")
+    date_of_ques_in_quiz=models.DateField(default="2022-12-01")
 
     def __str__(self):
         return self.Questions            
 
- 
+class select_winners(models.Model):
+    player_id=models.CharField(max_length=10)
+    game_id = models.CharField(max_length=10)
+    winner_category = models.CharField(max_length=10)
+    winner_selection_date = models.DateField(default="2022,12-24")
+    winner_selection_range_from=models.DateField(default="2022-12-34")
+    winner_selection_range_to=models.DateField(default="2022-12-34")
+
+    def __str__(self):
+        return self.player_id
