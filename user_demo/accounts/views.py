@@ -111,11 +111,12 @@ class QuizupAPI(APIView):
 
          got = {'user':str(request.user.id)}
          content = int(got["user"])
-         ques_sort_by_today=question_bank.objects.filter(date_of_ques_in_quiz=date.today())
-      #   quiz_send = question_bank.objects.order_by('?')[:question_count_from_admin]
-         quiz_send = ques_sort_by_today.order_by('?')[:question_count_from_admin]
+      #   ques_sort_by_today=question_bank.objects.filter(date_of_ques_in_quiz=date.today())
+         quiz_send = question_bank.objects.order_by('?')[:question_count_from_admin]
+      #   quiz_send = ques_sort_by_today.order_by('?')[:question_count_from_admin]
          serializer = question_bankSerializer(quiz_send, many=True)
          tobesend = serializer.data
+         print(tobesend)
          current_datetime = datetime.datetime.now()
          return Response({'success': True, 'message': 'Success', "data": {'count': question_count_from_admin, 'Duration': duration_ques, 'total_marks': marks_of_each_ques, "results": tobesend}})
         except:
@@ -411,7 +412,8 @@ class show_player_stats(APIView):
 
     def get_queryset(self):
        queryset = player_statsModel.objects.all()
-     #  queryset = player_stats.objects.order_by('user_days_score')
+       queryset = player_stats.objects.order_by('user_days_score')
+       print(queryset)
        return queryset
 
 
@@ -421,9 +423,11 @@ class show_player_stats(APIView):
      #  ha=queryset.order_by("-accuracy")[: :-1]  #get highest accuracy
      #  print(ha,"**********************")
        max1 = queryset.order_by("-accuracy")
+       print("^^^^^^^^")
        data=request.data
-       req_player_id = data.get('player_id')
-    #   print(req_player_id)
+       print("data")
+       req_player_id = data.get("player_id")
+       print(req_player_id)
     #   print("################")
        a=max1.values_list('accuracy', flat=True)
     #   print(a[0])
@@ -496,15 +500,15 @@ class show_player_stats(APIView):
       except: 
         return Response({'success': False, 'message': 'Error!', "data": { }})
       
-    def post(self, request, format=None):
+    # def post(self, request, format=None):
        
-      #  print(request.data,'############')
-        serializer = player_statsSerializer(data=request.data)
-        if serializer.is_valid():
-      #      print(request.data,'###################')
-            serializer.create(request.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #   #  print(request.data,'############')
+    #     serializer = player_statsSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #   #      print(request.data,'###################')
+    #         serializer.create(request.data)
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class select_winners(APIView):
     authentication_classes = [authentication.TokenAuthentication]
