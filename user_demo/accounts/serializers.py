@@ -77,7 +77,7 @@ class player_statsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = player_stats
-        fields = ('player_id','alloted_qid','groupid','gameid','user_days_score', 'user_total_score','marks_of_days_quiz','total_marks_of_quiz','accuracy','total_days_participated','consecutive_streak','date_of_participation')    
+        fields = ('player_id','player_name','alloted_qid','groupid','gameid','user_days_score', 'user_total_score','marks_of_days_quiz','total_marks_of_quiz','accuracy','total_days_participated','consecutive_streak','date_of_participation','player_photo_url')    
     def create(self,validate_data):
         return player_stats.objects.create(**validate_data)
 
@@ -93,7 +93,7 @@ class leaderboardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = player_stats
-        fields = ('player_id','user_days_score', 'user_total_score')    
+        fields = ('player_id','user_days_score', 'user_total_score', 'player_name', 'profile_photo_url')    
 
 class select_winnersSerializer(serializers.ModelSerializer):
 

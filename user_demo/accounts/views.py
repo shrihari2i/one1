@@ -165,7 +165,9 @@ class leaderboard(APIView):
 
     def post(self, request):
         req_data=request.data
-        queryset = player_statsModel.objects.all()  ### filter must be added for filtering by gameid
+        queryset = player_statsModel.objects.all();filter(gameid=req_data['season_gameid']) & player_statsModel.objects.filter(gameid=req_data['player_groupid']) ### filter must be added for filtering by groupid and gameid
+        print(str(req_data.get('ascORdec'))+"  "+req_data['season_gameid']+"  "+req_data['player_groupid'])
+        print(queryset)
         if req_data.get('ascORdec')==0:
              b  = queryset.order_by('user_days_score')
         elif req_data.get('ascORdec')==1:
@@ -174,17 +176,18 @@ class leaderboard(APIView):
              b  = queryset.order_by('user_total_score')     
         elif req_data.get('ascORdec')==3:
              b  = queryset.order_by('-user_total_score')         
-
-        try:
-        # If they need count, next, previous page link then we can implement commented code
-            # paginator = PageNumberPagination()
-            # result_page = paginator.paginate_queryset(b, request)
-            # serializer = leaderboardSerializer(result_page, many=True)
-            # result = paginator.get_paginated_response(serializer.data)
-            result = leaderboardSerializer(b, many=True)
-            return Response({"Success":True, "Message":"Leaderboard Records","Results":result.data})
-        except:
-            return Response({"Success":False,"Message":"Record not found"})
+        print(b)
+     #   try:
+        # If they need count, next, previous page link then we can implement below code
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(b, request)
+        serializer = leaderboardSerializer(result_page, many=True)
+        result = paginator.get_paginated_response(serializer.data)
+        ### end of pagination code    
+            # result = leaderboardSerializer(b, many=True) ## use this line if pagination is not required,
+        return Response({"Success":True, "Message":"Leaderboard Records","Results":result.data})
+      #  except:
+      #      return Response({"Success":False,"Message":"Record not found"})
             
 
 ## on submit questions
@@ -273,11 +276,7 @@ class My_score(APIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-   # def get(self, request, format=None):
-   #     table_data = My_scoreModel.objects.all()
-   #     print(table_data.query,'___________________________________')
-   #     serializer = My_scoreSerializer(table_data, many=True)
-   #     return Response(serializer.data)
+
     def getUser_stats_queryset(self):
         queryset = player_statsModel.objects.all()
         return queryset
@@ -286,14 +285,38 @@ class My_score(APIView):
        
         data=request.data
         print(data['player_id'],'############')
-        serializer = player_scoreSerializer(data=request.data)
-   
+        serializer = player_scoreSerializer(data=request.data)  
+   ##################################
+
+        serializer1 = player_statsSerializer(data=request.data)
+            
+        ps_user_data = request.data
+        get_id = {'user': str(request.user.id)}
+        ps_player_id = (ps_user_data['player_id'])  
+        ps_gameid = (ps_user_data['season_gameid'])
+        ps_groupid = (ps_user_data['player_groupid'])
+        ps_user_days_score = (ps_user_data['myscr'])
+        ps_marks_of_days_quiz  = (ps_user_data['total_score'])
+        ps_played_dt=(ps_user_data['played_dt'])
         
-        if serializer.is_valid():
-         print("in is valid")   
-         serializer.create(request.data)
+        df = player_scoreModel.objects.create (player_id= ps_player_id,
+                                                season_gameid=ps_gameid,
+                                                myscr=ps_user_days_score,
+                                                player_groupid=ps_groupid,
+                                                total_score=ps_marks_of_days_quiz,
+                                                played_dt=ps_played_dt
+                                            
+                                            ) 
+        df.save()
+        serializer=player_scoreSerializer(df)
+   ###################################
+        
+     #   if serializer.is_valid():
+      #   print("in is valid")   
+     #    serializer.create(request.data)  ##########posting the data in player_score tble
           
         queryset1=self.getUser_stats_queryset()
+
       #  print("************",queryset1.values('alloted_qid'))
       #  print("player   ",data.get('player_id'))
       #  print("groupid   ",data.get('player_groupid'))
@@ -367,13 +390,14 @@ class My_score(APIView):
                                     })
         elif b.count()==0:
             try:
-    ######## LOGIC TO INSERT THE NEW PLAYER ID IN USER_STATS TABLE  
+    ######## LOGIC TO INSERT THE NEW PLAYER ID IN player_STATS TABLE  
                 serializer1 = player_statsSerializer(data=request.data)
             
                 user_data = request.data
                 get_id = {'user': str(request.user.id)}
                 player_id = (user_data['player_id'])  
-                alloted_qid = "1,2,2,2"
+                player_name=(user_data['player_name'])
+                alloted_qid = "1,2,2,2" #it is just for provision. currently this is not used on any feature
                 gameid = (user_data['season_gameid'])
                 groupid = (user_data['player_groupid'])
                 user_days_score = (user_data['myscr'])
@@ -385,15 +409,16 @@ class My_score(APIView):
                 consecutive_streak=1
                 streak_counter=0
                 date_of_participation=(user_data['played_dt'])
+                profile_photo_url=(user_data['player_photo_url'])
             
-                df = player_statsModel.objects.create (player_id= player_id,alloted_qid=alloted_qid,gameid=gameid,
+                df = player_statsModel.objects.create (player_id= player_id,player_name=player_name,alloted_qid=alloted_qid,gameid=gameid,
                                                     groupid=groupid,user_days_score=user_days_score,
                                                     user_total_score=user_total_score,
                                                     marks_of_days_quiz=marks_of_days_quiz,
                                                     total_marks_of_quiz=total_marks_of_quiz,accuracy=accuracy,
                                                     total_days_participated=total_days_participated,
                                                     consecutive_streak=consecutive_streak,streak_counter=streak_counter,
-                                                    date_of_participation=date_of_participation) 
+                                                    date_of_participation=date_of_participation, profile_photo_url=profile_photo_url) 
                 df.save()
                 serializer=player_statsSerializer(df)
                 return Response({'Success': True,  "Message":"Record inserted Successfully", "data": {"results": data,
@@ -482,6 +507,8 @@ class show_player_stats(APIView):
        ############## data from player score to plot graph
        queryset_scr = player_scoreModel.objects.filter(player_id=req_player_id)
        queryset_scr_dt = queryset_scr.order_by('played_dt')
+       queryset_player_name = max2.values_list('player_name', flat=True)
+       queryset_profile_photo_url = max2.values_list('profile_photo_url', flat=True)
        xy_data = queryset_scr_dt.values('played_dt','myscr') 
       # x_qdt = queryset_scr_dt.values_list('played_dt',flat=True)
        
@@ -496,7 +523,7 @@ class show_player_stats(APIView):
        serializer = show_player_statsSerializer(queryset,many=True)
        return Response({'success': True, 'message': 'Success', "data": {'player_total_score': str(*player_total_score)
                                     , 'Accuracy': str(z[0])+'%', 'Rank': gb_index, "percentile": percentile,'total_days_of_the_season':'hc',
-                                    'no.of_days_participated': str(*days_participated),'streak':str(*streak,) , 'bar_chart':xy_data}})
+                                    'no.of_days_participated': str(*days_participated),'streak':str(*streak,) ,'player_name':queryset_player_name,'profile_photo_url':queryset_profile_photo_url, 'bar_chart':xy_data}})
       except: 
         return Response({'success': False, 'message': 'Error!', "data": { }})
       

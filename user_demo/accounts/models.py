@@ -1,3 +1,4 @@
+from email.policy import default
 from django.utils import timezone
 from tkinter.tix import Tree
 from django.db import models
@@ -131,6 +132,7 @@ class user_stats(models.Model):
 class player_stats(models.Model):   ####  old name user_stats
 
     player_id=models.CharField(max_length=10) #models.OneToOneField(User, on_delete=models.CASCADE)
+    player_name=models.CharField(max_length=50, default="Not Available")
     alloted_qid=models.CharField(max_length=100)
     groupid = models.CharField(max_length=10) #groupis
     gameid = models.CharField(max_length=10) #gameid
@@ -143,6 +145,7 @@ class player_stats(models.Model):   ####  old name user_stats
     consecutive_streak =  models.IntegerField(default=0)
     streak_counter = models.IntegerField(default=0)
     date_of_participation = models.DateField(default=date.today())  #dats
+    profile_photo_url = models.CharField(max_length=100, default="Not Available")
     
     def __str__(self):
         return self.player_id
