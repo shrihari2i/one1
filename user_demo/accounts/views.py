@@ -22,7 +22,7 @@ from django.http import HttpResponse
 from .models import player_score as player_scoreModel
 from .models import player_stats as player_statsModel 
 #from .serializers import PlayersSer, QuizupSerializer, PlayersleadSer, Save_score, PlayerScoreSerializer, P_scoreSerializer, My_scoreSerializer, user_statsSerializer
-from .models import player_stats,player_score,question_bank, GU_Players, select_winners
+from .models import player_stats,player_score,question_bank, GU_Players, select_winners as select_winnersModel
    
 from .serializers import question_bankSerializer, player_scoreSerializer, player_statsSerializer,show_player_statsSerializer,leaderboardSerializer, select_winnersSerializer
 import random
@@ -119,8 +119,9 @@ class QuizupAPI(APIView):
          print(tobesend)
          current_datetime = datetime.datetime.now()
          return Response({'success': True, 'message': 'Success', "data": {'count': question_count_from_admin, 'Duration': duration_ques, 'total_marks': marks_of_each_ques, "results": tobesend}})
-        except:
-         return Response({'Success': False, 'message': 'Oops!!! Something went wrong. Contact Admin'})   
+        except Exception as e:
+            print("QuizsendAPI"+e)
+            return Response({'Success': False, 'message': 'Oops!!! Something went wrong. Contact Admin'})   
 
 class CheckIfPlayed(APIView):
      authentication_classes = [authentication.TokenAuthentication, ]
@@ -134,9 +135,9 @@ class CheckIfPlayed(APIView):
         print("Check grp"+req_data.get('player_groupid'))   
         
         queryset = player_statsModel.objects.filter(player_id=req_data.get('player_id')) & player_statsModel.objects.filter(date_of_participation=req_data.get('played_dt')) & player_statsModel.objects.filter(groupid=req_data.get('player_groupid'))
-        print(queryset)
-        if queryset.exists():
-            return Response({"Success": False, "message": "You have played the game today. You may [play tomorrow"})
+        print(queryset.count())
+        if (queryset.count()):
+            return Response({"Success": False, "message": "You have played the game today. You may play tomorrow"})
      
         else:
             return Response({"Success": True, "message": "Wish you good luck for quiz"})
@@ -165,9 +166,9 @@ class leaderboard(APIView):
 
     def post(self, request):
         req_data=request.data
-        queryset = player_statsModel.objects.all();filter(gameid=req_data['season_gameid']) & player_statsModel.objects.filter(gameid=req_data['player_groupid']) ### filter must be added for filtering by groupid and gameid
+        queryset = player_statsModel.objects.all();#filter(gameid=req_data['season_gameid']) & player_statsModel.objects.filter(gameid=req_data['player_groupid']) ### filter must be added for filtering by groupid and gameid
         print(str(req_data.get('ascORdec'))+"  "+req_data['season_gameid']+"  "+req_data['player_groupid'])
-        print(queryset)
+     #   print(queryset)
         if req_data.get('ascORdec')==0:
              b  = queryset.order_by('user_days_score')
         elif req_data.get('ascORdec')==1:
@@ -177,19 +178,22 @@ class leaderboard(APIView):
         elif req_data.get('ascORdec')==3:
              b  = queryset.order_by('-user_total_score')         
         print(b)
-     #   try:
+        try:
         # If they need count, next, previous page link then we can implement below code
-        paginator = PageNumberPagination()
-        result_page = paginator.paginate_queryset(b, request)
-        serializer = leaderboardSerializer(result_page, many=True)
-        result = paginator.get_paginated_response(serializer.data)
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(b, request)
+            serializer = leaderboardSerializer(result_page, many=True)
+            result = paginator.get_paginated_response(serializer.data)
         ### end of pagination code    
             # result = leaderboardSerializer(b, many=True) ## use this line if pagination is not required,
-        return Response({"Success":True, "Message":"Leaderboard Records","Results":result.data})
-      #  except:
-      #      return Response({"Success":False,"Message":"Record not found"})
-            
-
+            print(queryset.count())
+            ld_strip = queryset.values_list()
+            return Response({"Success":True, "Message":"Leaderboard Records","Results":result.data})
+        except Exception as e:
+            print(e)
+            return Response({"Success":False,"Message":"Record not found"})
+   
+   
 ## on submit questions
 # class Score(APIView):
 #     authentication_classes = [authentication.TokenAuthentication]
@@ -522,8 +526,8 @@ class show_player_stats(APIView):
 
        serializer = show_player_statsSerializer(queryset,many=True)
        return Response({'success': True, 'message': 'Success', "data": {'player_total_score': str(*player_total_score)
-                                    , 'Accuracy': str(z[0])+'%', 'Rank': gb_index, "percentile": percentile,'total_days_of_the_season':'hc',
-                                    'no.of_days_participated': str(*days_participated),'streak':str(*streak,) ,'player_name':queryset_player_name,'profile_photo_url':queryset_profile_photo_url, 'bar_chart':xy_data}})
+                                    , 'Accuracy': str(z[0])+'%', 'Rank': gb_index, "percentile": percentile,'total_days_of_the_season':50,
+                                    'no.of_days_participated': str(*days_participated),'streak':str(*streak,) ,'player_name':queryset_player_name[0],'profile_photo_url':queryset_profile_photo_url[0], 'bar_chart':xy_data}})
       except: 
         return Response({'success': False, 'message': 'Error!', "data": { }})
       
@@ -545,8 +549,8 @@ class select_winners(APIView):
     def post(self, request):
         req_data = request.data;
         req_player_id = req_data.get('player_id')
-        req_game_id = req_data.get('game_id')
-        req_group_id=req_data.get('group_id')
+        req_game_id = req_data.get('season_gameid')
+        req_group_id=req_data.get('player_groupid')
         req_winner_category = req_data.get('winner_category')
         req_winner_selection_date = req_data.get('winner_selection_date')
         req_winner_selection_range_from = req_data.get('winner_selection_range_from')
@@ -557,23 +561,26 @@ class select_winners(APIView):
         print(req_winner_selection_range_to)
         try:
       
-            queryset = player_statsModel.objects.filter(groupid=req_group_id) & player_statsModel.objects.filter(gameid=req_game_id) # & player_statsModel.objects.filter(date_of_participation__range=[req_winner_selection_range_from, req_winner_selection_range_to]) 
+            queryset = player_statsModel.objects.all();#filter(groupid=req_group_id) & player_statsModel.objects.filter(gameid=req_game_id) # & player_statsModel.objects.filter(date_of_participation__range=[req_winner_selection_range_from, req_winner_selection_range_to]) 
             
             print(queryset)
             select_random=queryset.order_by('?')[:3]
-            print(select_random)
+            selected_winners=select_random.values_list('player_id', flat=True)
+            selected_winner_str=selected_winners[0]+","+selected_winners[1]+","+selected_winners[2]
             ############## Below code is inserting data in #######################
-            # df = select_winners.objects.create (player_id= req_player_id, game_id=req_game_id,
-            #                                         winner_category=req_winner_category, winner_selection_date=req_winner_selection_date,
-            #                                         winner_selection_date=req_winner_selection_date,
-            #                                         winner_selection_range_from=req_winner_selection_range_from,
-            #                                         winner_selection_range_to=req_winner_selection_range_to,
+            df = select_winnersModel.objects.create (winner_ids= selected_winner_str, game_id=req_game_id,
+                                                    winner_category=req_winner_category, winner_selection_date=req_winner_selection_date,
+                                                    winner_selection_range_from=req_winner_selection_range_from,
+                                                    winner_selection_range_to=req_winner_selection_range_to
                                                     
-            #                                   ) 
-            # df.save()
-            # serializer=player_statsSerializer(df)
-            return Response({'success':True, 'message': "Randomly selected 3 winner"})# "data":{serializer.data}})
-        except:
+                                              ) 
+            df.save()
+           # serializer=select_winnersSerializer(df)
+          #  serializer=player_statsSerializer(select_random)
+            print("&&&&&&&&&&&&")
+            return Response({'success':True, 'message': "Randomly selected 3 winner"})#, "data":{serializer.data}})
+        except Exception as e:
+                print(e)
                 return Response({'success':False, 'message': "Oops!! somthing wrong"})
             ######################################
 
@@ -582,7 +589,17 @@ class select_winners(APIView):
             # except:
             #     return Response({'success':False, 'message': "Oops!! somthing wrong"})
 
+class leaderboard_strip(APIView):
+    authentication_classes = [authentication.TokenAuthentication, ]
+    permission_classes = [permissions.IsAuthenticated, ]
+    pagination_class = PageNumberPagination
 
+    def post(self, request):
+        req_data=request.data
+        queryset = player_statsModel.objects.all();#filter(gameid=req_data['season_gameid']) & player_statsModel.objects.filter(gameid=req_data['player_groupid']) ### filter must be added for filtering by groupid and gameid
+        print(queryset.count)
+
+        return Response({'Success':True})
 
 
 
