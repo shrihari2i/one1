@@ -134,7 +134,8 @@ class CheckIfPlayed(APIView):
         print("Check"+req_data.get('player_id'))   
         print("Check grp"+req_data.get('player_groupid'))   
         
-        queryset = player_statsModel.objects.filter(player_id=req_data.get('player_id')) & player_statsModel.objects.filter(date_of_participation=req_data.get('played_dt')) & player_statsModel.objects.filter(groupid=req_data.get('player_groupid'))
+        queryset1 = player_statsModel.objects.all();
+        queryset = queryset1.filter(player_id=req_data.get('player_id')) & player_statsModel.objects.filter(date_of_participation=req_data.get('played_dt')) & player_statsModel.objects.filter(groupid=req_data.get('player_groupid'))
         print(queryset.count())
         if (queryset.count()):
             return Response({"Success": False, "message": "You have played the game today. You may play tomorrow"})
@@ -528,7 +529,8 @@ class show_player_stats(APIView):
        return Response({'success': True, 'message': 'Success', "data": {'player_total_score': str(*player_total_score)
                                     , 'Accuracy': str(z[0])+'%', 'Rank': gb_index, "percentile": percentile,'total_days_of_the_season':50,
                                     'no.of_days_participated': str(*days_participated),'streak':str(*streak,) ,'player_name':queryset_player_name[0],'profile_photo_url':queryset_profile_photo_url[0], 'bar_chart':xy_data}})
-      except: 
+      except Exception as e: 
+        print(e)
         return Response({'success': False, 'message': 'Error!', "data": { }})
       
     # def post(self, request, format=None):

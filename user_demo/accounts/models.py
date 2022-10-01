@@ -189,7 +189,7 @@ class question_bank(models.Model):   ######### old name quiz_up
     Right_Answer =  models.CharField(max_length=250)
     quiz_fact =  models.CharField(max_length=250)
     image = models.ImageField(default="logo.png")
-    date_of_ques_in_quiz=models.DateField(default="2022-12-01")
+ #   date_of_ques_in_quiz=models.DateField(default="2022-12-01")
 
     def __str__(self):
         return self.Questions            
