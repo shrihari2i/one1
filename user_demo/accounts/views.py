@@ -336,13 +336,13 @@ class My_score(APIView):
        # b.update(user_days_score=data['myscr'])
                 x=b.values_list('user_total_score', flat=True)
 
-        #  print("xxxxxxxxxxxxxxxxx",x[0])
+                print("xxxxxxxxxxxxxxxxx",x[0])
                 b.update(user_total_score=x[0]+data['myscr'])
                 b.update(marks_of_days_quiz=data['total_score'])
                 y=b.values_list('total_marks_of_quiz', flat=True)
                 b.update(total_marks_of_quiz =y[0]+data['total_score'])  # totalk marks of quiz till date( out of)
                 z=b.values_list('accuracy',flat=True)
-        #  print(z[0],'  myscr: ',data['myscr'],'  total score : ',data['total_score'])
+                print(z[0],'  myscr: ',data['myscr'],'  total score : ',data['total_score'])
                 b.update(accuracy=((z[0]+(data['myscr']/data['total_score'])*100)/2))
                 a=b.values_list('total_days_participated',flat=True)
                 b.update(total_days_participated=a[0]+1)
@@ -398,25 +398,31 @@ class My_score(APIView):
             try:
     ######## LOGIC TO INSERT THE NEW PLAYER ID IN player_STATS TABLE  
                 serializer1 = player_statsSerializer(data=request.data)
-            
+                #print(" in b=0")
                 user_data = request.data
                 get_id = {'user': str(request.user.id)}
                 player_id = (user_data['player_id'])  
+                #print("player id"+player_id)
                 player_name=(user_data['player_name'])
+                #print("player_name"+player_name)
                 alloted_qid = "1,2,2,2" #it is just for provision. currently this is not used on any feature
                 gameid = (user_data['season_gameid'])
                 groupid = (user_data['player_groupid'])
+                #print("1")
                 user_days_score = (user_data['myscr'])
                 user_total_score=(user_data['myscr'])
+                #print("2")
                 marks_of_days_quiz  = (user_data['total_score'])
                 total_marks_of_quiz = (user_data['total_score'])
                 accuracy = ((user_data['myscr'])/(user_data['total_score'])*100)
+
+                #print("c")
                 total_days_participated=1
                 consecutive_streak=1
                 streak_counter=0
                 date_of_participation=(user_data['played_dt'])
-                profile_photo_url=(user_data['player_photo_url'])
-            
+                profile_photo_url=(user_data['profile_photo_url'])
+                print("before query")
                 df = player_statsModel.objects.create (player_id= player_id,player_name=player_name,alloted_qid=alloted_qid,gameid=gameid,
                                                     groupid=groupid,user_days_score=user_days_score,
                                                     user_total_score=user_total_score,
@@ -425,12 +431,15 @@ class My_score(APIView):
                                                     total_days_participated=total_days_participated,
                                                     consecutive_streak=consecutive_streak,streak_counter=streak_counter,
                                                     date_of_participation=date_of_participation, profile_photo_url=profile_photo_url) 
+                
                 df.save()
                 serializer=player_statsSerializer(df)
                 return Response({'Success': True,  "Message":"Record inserted Successfully", "data": {"results": data,
                                 } 
                                     })
-            except:
+            except Exception as e:
+                print("CCCCCCCCCCC")
+                print(e)
                 return Response({'Success': False, "Message":"Record not inserted" , "data": {
                                } 
                                     })
