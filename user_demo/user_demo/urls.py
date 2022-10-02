@@ -31,7 +31,9 @@ urlpatterns = [
     path('playerscore/',My_score.as_view()),
     path('showplayerstats/',show_player_stats.as_view()),
     path('CheckIfPlayed/',CheckIfPlayed.as_view()),
-    path('selectwinners/',select_winners.as_view())
+    path('selectwinners/',select_winners.as_view()),
+    path('leaderboardstrip/',leaderboard_strip.as_view())
+    
     
     
   

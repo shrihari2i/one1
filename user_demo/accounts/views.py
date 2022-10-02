@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from importlib.resources import contents
+from multiprocessing.sharedctypes import Value
 from tokenize import group
 from unittest import result
 from django.shortcuts import render
@@ -594,16 +595,52 @@ class select_winners(APIView):
 class leaderboard_strip(APIView):
     authentication_classes = [authentication.TokenAuthentication, ]
     permission_classes = [permissions.IsAuthenticated, ]
-    pagination_class = PageNumberPagination
+   
 
     def post(self, request):
         req_data=request.data
-        queryset = player_statsModel.objects.all();#filter(gameid=req_data['season_gameid']) & player_statsModel.objects.filter(gameid=req_data['player_groupid']) ### filter must be added for filtering by groupid and gameid
-        print(queryset.count)
-
-        return Response({'Success':True})
-
-
+        try:  
+            queryset = player_statsModel.objects.all()#filter(gameid=req_data['season_gameid']) & player_statsModel.objects.filter(gameid=req_data['player_groupid']) ### filter must be added for filtering by groupid and gameid
+            player_id=req_data['player_id']
+            print(player_id)
+            queryset_user_total_score = queryset.order_by('-user_total_score')
+            
+        # print(queryset.count())
+            vlist_user_total_score = queryset_user_total_score.values_list('user_total_score',flat=True)
+            vlist_player_id = queryset_user_total_score.values_list('user_total_score',flat=True)
+            
+            vlist_player_id =queryset_user_total_score.values_list('player_id',flat=True)
+            vlist_player_name =queryset_user_total_score.values_list('player_name',flat=True)
+            
+            # print(vlist_user_total_score)
+            # print(vlist_player_id)
+            list_user_total_score = (list(vlist_user_total_score))
+            set_user_total_score = list(set(list_user_total_score))
+            list_player_id = list(vlist_player_id)
+            sorted_set = sorted(set_user_total_score, reverse=True) 
+            # print(sorted_set)
+            # print(list_player_id )
+            index_val = list_player_id.index(player_id)
+            # print(index_val+1)
+            index_score = list_user_total_score[index_val]
+        # print(index_score)
+            player_name=vlist_player_name[index_val]
+            rank = sorted_set.index(index_score)
+            rank=rank+1 #adding one as index starts from 0
+            total_player = queryset.count()
+            player_score=index_score
+            people_behind_player = 100-((rank/total_player)*100)
+            print(rank+1)  # Rank
+            print(total_player) #total player playing the game
+            print(player_score)  # score of the player
+            print(player_name) #player name
+            print(people_behind_player)
+            return Response({'success': True, 'message': 'Success', "data": {'rank': rank, 'total_player':total_player
+                                        , 'player_score': player_score, 'player_name': player_name
+                                        , "people_behind_player": str(round(people_behind_player))+"%"}})
+        except Exception as e:
+            print(e)
+            return Response({'success':False, 'message':"Something went wrong in strip data"})
 
 
 
@@ -626,5 +663,4 @@ class leaderboard_strip(APIView):
         #     serializer = PlayerScoreSerializer(playerdata)
         #     data = serializer.data
         #     return Response({'status':True})
-
 
