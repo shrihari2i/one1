@@ -335,7 +335,7 @@ class My_score(APIView):
             try:
        # b.update(user_days_score=data['myscr'])
                 x=b.values_list('user_total_score', flat=True)
-
+                b.update(user_days_score=data['myscr'])
                 print("xxxxxxxxxxxxxxxxx",x[0])
                 b.update(user_total_score=x[0]+data['myscr'])
                 b.update(marks_of_days_quiz=data['total_score'])
